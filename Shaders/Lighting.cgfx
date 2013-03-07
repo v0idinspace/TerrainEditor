@@ -1,0 +1,106 @@
+// Basic per-fragment lighting (no texture) fragment shader.
+// Source: NVIDIA CG Tutorial (http://http.developer.nvidia.com/CgTutorial/cg_tutorial_frontmatter.html)
+
+float4x4 gWorldMtx;
+float4x4 gViewMtx;
+float4x4 gProjectionMtx;
+
+float3 gEyePosition;
+
+//float3 gGlobalAmbient;
+float3 gLightColor;
+float3 gLightPosition;
+//float3 gEyePosition;
+//float3 gMatEmissive;
+//float3 gMatAmbient;
+//float3 gMatDiffuse;
+//float3 gMatSpecular;
+float3 gMatShininess;
+
+// Input Structs
+struct LightA2V
+{
+  float4 position	: POSITION;
+  float4 normal	  : NORMAL;
+};
+
+struct LightV2F
+{
+  float4 position	: POSITION;
+  float3 wPosition: TEXCOORD0;
+  float4 wNormal	: TEXCOORD1;
+};
+
+
+
+
+// --- Lighting ---
+LightV2F fragment_light_vs(LightA2V IN)
+{
+  LightV2F OUT;
+
+  // Calculate WVP
+  float4x4 wvp;
+  wvp = mul(gWorldMtx, gViewMtx);
+  wvp = mul(wvp, gProjectionMtx);
+  
+  // Transform to world space
+	OUT.wPosition = mul(IN.position, gWorldMtx);
+	OUT.wNormal	  = mul(IN.normal, gWorldMtx);
+  OUT.wNormal = IN.normal;
+
+	// Transform to homogeneous clip space
+  OUT.position  = mul(IN.position, wvp);
+
+  // Transform to world space
+  //OUT.wPosition = float3(mul(gWorldMtx, IN.position));
+  //OUT.wNormal	  = float3(mul(gWorldMtx, IN.normal));
+
+  // Transform to homogeneous clip space
+  //OUT.position  = mul(gViewMtx, float4(OUT.wPosition, 1.0f));
+  //OUT.position  = mul(gProjectionMtx, OUT.position);
+
+  //OUT.position = mul(wvp, IN.position);
+
+  return OUT;
+}
+
+// Fragment shader
+float4 fragment_light_fs(LightV2F IN) : COLOR0
+{
+  float4 ambient = float4(0.15f, 0.15f, 0.10f, 1.0f);
+
+  float3 P = IN.wPosition.xyz;
+  float3 N = normalize(IN.wNormal);
+  
+  // Diffuse light
+  float3 L = normalize(gLightPosition - P);
+  float diffuseLight = max(dot(N, L), 0);
+  float3 diffuse = gLightColor * diffuseLight;
+  
+  // Specular light
+  float3 V = normalize(gEyePosition - P);
+  float3 H = normalize(L + V);
+  //float specularLight = pow(max(dot(N, H), 0), gMatShininess);
+  //if (diffuseLight <= 0)
+  //  specularLight = 0;
+  //float3 specular = gLightColor * specularLight * float3(1, 1, 1);// * gMatSpecular
+  
+  float4 color = float4(0, 0, 0, 1);
+  color.xyz = ambient + diffuse;
+  
+  //color.xyz = IN.wNormal;
+  color.w = 1.0f;
+
+  return color;
+}
+
+// --- Techniques ---
+technique LightingNoAlpha
+{
+  pass p0
+  {
+    VertexProgram    = compile latest fragment_light_vs();
+    FragmentProgram  = compile latest fragment_light_fs();
+  }
+}

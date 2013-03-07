@@ -1,0 +1,50 @@
+
+
+// Variables
+float4x4 gWorldMtx;
+float4x4 gViewMtx;
+float4x4 gProjectionMtx;
+
+// Input structs
+struct ColorA2V
+{
+  float4 position	: POSITION;
+};
+
+struct ColorV2F
+{
+  float4 position	: POSITION;
+  float4 color	: COLOR0;
+};
+
+
+// --- Wireframe rendering ----
+ColorV2F color_vs(ColorA2V IN)
+{
+  ColorV2F OUT;
+
+  float4x4 wvp;
+  wvp = mul(gWorldMtx, gViewMtx);
+  wvp = mul(wvp, gProjectionMtx);
+  
+	// Transform to homogeneous clip space
+  OUT.position  = mul(IN.position, wvp);
+  OUT.color     = float4(0, 0.5f, 0, 1.0f);
+
+  return OUT;
+}
+
+float4 color_fs(ColorV2F IN) : COLOR0
+{
+  return IN.color;
+}
+
+// --- Techniques ---
+technique WireframeAlpha
+{
+  pass p0
+  {
+    VertexProgram    = compile latest color_vs();
+    FragmentProgram  = compile latest color_fs();
+  }
+}

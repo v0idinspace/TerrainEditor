@@ -1,0 +1,12 @@
+
+struct v2f
+{
+  float4 position	: POSITION;
+  float4 color	: COLOR0;
+};
+
+float4 color_fs(v2f IN) : COLOR0
+{
+  IN.color.w = 0;
+  return IN.color;
+}

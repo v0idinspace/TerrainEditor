@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{49A9A6BE-64AF-4425-A759-A3E8CE4F4AA1}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>TerrainEditor</RootNamespace>
+    <ProjectName>TerrainEditor</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Include;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\VLD\include;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\glfw-2.7.7\include;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\Cg\include;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\AMD_APP\include;$(ProjectDir)Include;$(DXSDK_DIR)Include;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\AntTweakBar\include;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\glew-1.7.0\include;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\freeglut\include;$(IncludePath)</IncludePath>
+    <IntDir>$(SolutionDir)Obj\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IntDir>$(SolutionDir)Obj\$(Configuration)\</IntDir>
+    <IncludePath>$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Include;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\VLD\include;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\glew-1.7.0\include;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\freeglut\include;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\Cg\include;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\AMD_APP\include;$(ProjectDir)Include;$(DXSDK_DIR)Include;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\glfw-2.7.7\include;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\AntTweakBar\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ZephyrEngine.lib;dxguid.lib;dinput8.lib;GLFW.lib;AntTweakBar.lib;pdh.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Lib\Debug;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\VLD\lib\Win32;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\glfw-2.7.7\lib-msvc110;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\Cg\lib;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\AMD_APP\lib\x86;$(DXSDK_DIR)/lib/x86;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\AntTweakBar\lib;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\glew-1.7.0\lib;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\freeglut\lib</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Lib\Release;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\VLD\lib\Win32;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\glew-1.7.0\lib;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\freeglut\lib;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\Cg\lib;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\AMD_APP\lib\x86;$(DXSDK_DIR)/lib/x86;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\glfw-2.7.7\lib-msvc110;$(SolutionDir)..\ZephyrEngine\ZephyrEngine\Thirdparty\AntTweakBar\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ZephyrEngine.lib;dxguid.lib;dinput8.lib;GLFW.lib;AntTweakBar.lib;pdh.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="Include\FrameObserver.h" />
+    <ClInclude Include="Include\GUI.h" />
+    <ClInclude Include="Include\Input\SCTInputManager.h" />
+    <ClInclude Include="Include\Input\SCTKeyboard.h" />
+    <ClInclude Include="Include\Input\SCTMouse.h" />
+    <ClInclude Include="Include\Input\Win32\SCTInputManagerWin32.h" />
+    <ClInclude Include="Include\Input\Win32\SCTKeyboardWin32.h" />
+    <ClInclude Include="Include\Input\Win32\SCTMouseWin32.h" />
+    <ClInclude Include="Include\MarchingCubes.h" />
+    <ClInclude Include="Include\MCDefines.h" />
+    <ClInclude Include="Include\MCTables.h" />
+    <ClInclude Include="Include\OctreeSceneManager.h" />
+    <ClInclude Include="Include\OrbitCamera.h" />
+    <ClInclude Include="Include\Statistics.h" />
+    <ClInclude Include="Include\VoxelHeaders.h" />
+    <ClInclude Include="Include\VoxelHelper.h" />
+    <ClInclude Include="Include\VoxelTerrainManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Src\FrameObserver.cpp" />
+    <ClCompile Include="Src\GUI.cpp" />
+    <ClCompile Include="Src\Input\SCTInputManager.cpp" />
+    <ClCompile Include="Src\Input\SCTKeyboard.cpp" />
+    <ClCompile Include="Src\Input\SCTMouse.cpp" />
+    <ClCompile Include="Src\Input\Win32\SCTInputManagerWin32.cpp" />
+    <ClCompile Include="Src\Input\Win32\SCTKeyboardWin32.cpp" />
+    <ClCompile Include="Src\Input\Win32\SCTMouseWin32.cpp" />
+    <ClCompile Include="Src\main.cpp" />
+    <ClCompile Include="Src\MarchingCubes.cpp" />
+    <ClCompile Include="Src\OctreeSceneManager.cpp" />
+    <ClCompile Include="Src\OrbitCamera.cpp" />
+    <ClCompile Include="Src\Statistics.cpp" />
+    <ClCompile Include="Src\VoxelHelper.cpp" />
+    <ClCompile Include="Src\VoxelTerrainManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CLPrograms\mc_simple.cl" />
+    <None Include="CLPrograms\noise.cl" />
+    <None Include="CLPrograms\terrain.cl" />
+    <None Include="Shaders\Color.cgfx" />
+    <None Include="Shaders\ColorFS.cg" />
+    <None Include="Shaders\ColorVS.cg" />
+    <None Include="Shaders\LightFS.cg" />
+    <None Include="Shaders\LightHelper.cg" />
+    <None Include="Shaders\Lighting.cgfx" />
+    <None Include="Shaders\LightVS.cg" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

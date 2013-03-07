@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="CLPrograms">
+      <UniqueIdentifier>{36fb198a-3bb2-4b22-ab99-9d3f9f168ad5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{d1ded70b-b631-4a3a-837e-85e449805d53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Input">
+      <UniqueIdentifier>{37e67839-da0f-40de-83f0-9943eddeef92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Input\Win32">
+      <UniqueIdentifier>{8c75407f-c8d2-4ab8-9587-9113c6573aff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Input">
+      <UniqueIdentifier>{dae7588e-1786-470a-8287-e9272586ae1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Input\Win32">
+      <UniqueIdentifier>{4bcdbf00-251e-47a8-b7eb-4a83850552b3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Include\FrameObserver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\OctreeSceneManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\VoxelTerrainManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\VoxelHeaders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\MCDefines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\MCTables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\MarchingCubes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\VoxelHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Input\SCTInputManager.h">
+      <Filter>Header Files\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Input\SCTKeyboard.h">
+      <Filter>Header Files\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Input\SCTMouse.h">
+      <Filter>Header Files\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Input\Win32\SCTInputManagerWin32.h">
+      <Filter>Header Files\Input\Win32</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Input\Win32\SCTKeyboardWin32.h">
+      <Filter>Header Files\Input\Win32</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Input\Win32\SCTMouseWin32.h">
+      <Filter>Header Files\Input\Win32</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\GUI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\OrbitCamera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Statistics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Src\FrameObserver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\OctreeSceneManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\VoxelTerrainManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\MarchingCubes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\VoxelHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Input\SCTInputManager.cpp">
+      <Filter>Source Files\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Input\SCTKeyboard.cpp">
+      <Filter>Source Files\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Input\SCTMouse.cpp">
+      <Filter>Source Files\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Input\Win32\SCTInputManagerWin32.cpp">
+      <Filter>Source Files\Input\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Input\Win32\SCTKeyboardWin32.cpp">
+      <Filter>Source Files\Input\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Input\Win32\SCTMouseWin32.cpp">
+      <Filter>Source Files\Input\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\GUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\OrbitCamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Statistics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CLPrograms\noise.cl">
+      <Filter>CLPrograms</Filter>
+    </None>
+    <None Include="CLPrograms\terrain.cl">
+      <Filter>CLPrograms</Filter>
+    </None>
+    <None Include="Shaders\LightFS.cg">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shaders\LightHelper.cg">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shaders\LightVS.cg">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="CLPrograms\mc_simple.cl">
+      <Filter>CLPrograms</Filter>
+    </None>
+    <None Include="Shaders\ColorFS.cg">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shaders\ColorVS.cg">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shaders\Lighting.cgfx">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shaders\Color.cgfx">
+      <Filter>Shader</Filter>
+    </None>
+  </ItemGroup>
+</Project>

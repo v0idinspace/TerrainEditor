@@ -1,0 +1,55 @@
+-------------------------------------
+# Noise prefabs
+Noise prefab:	0
+Size:			32
+Frequency:		1
+Noise prefab:	1
+Size:			32
+Frequency:		1
+Noise prefab:	2
+Size:			32
+Frequency:		1
+-------------------------------------
+# Terrain patch global parameters
+Size:			64
+Iso-value:		8
+Ground:			0
+-------------------------------------
+# Metaballs
+Metaball:		M0 enabled
+Position:		x 0 y 0 z 0
+Radius:			0.5
+Intensity:		1
+Metaball:		M1 enabled
+Position:		x 0 y 0 z 0
+Radius:			0.5
+Intensity:		1
+Metaball:		M2 enabled
+Position:		x 0 y 0 z 0
+Radius:			0.5
+Intensity:		1
+-------------------------------------
+# Noise layers
+Noise layer:	NS0 disabled
+Prefab index:	0
+Type:			ADD
+Scale:			1
+Intensity:		0.1
+Noise layer:	NS1 disabled
+Prefab index:	0
+Type:			ADD
+Scale:			1
+Intensity:		0.1
+Noise layer:	NS2 disabled
+Prefab index:	0
+Type:			ADD
+Scale:			1
+Intensity:		0.1
+-------------------------------------
+# Height gradient
+Start height:	0
+Intensity:		0
+-------------------------------------
+# Hard ground
+Start height:	0
+Intensity:		1

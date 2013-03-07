@@ -1,0 +1,59 @@
+// Basic per-fragment lighting (no texture) fragment shader.
+// Source: NVIDIA CG Tutorial (http://http.developer.nvidia.com/CgTutorial/cg_tutorial_frontmatter.html)
+
+
+// Light stuff
+// TODO: Check how to group this into a structure per frame, something like:
+//cbuffer cbPerFrame
+//{
+//	Light gLight;
+//	int gLightType;
+//	float3 gEyePosW;
+//};
+
+float3 gEyePosition;
+
+//float3 gGlobalAmbient;
+float3 gLightColor;
+float3 gLightPosition;
+//float3 gEyePosition;
+//float3 gMatEmissive;
+//float3 gMatAmbient;
+//float3 gMatDiffuse;
+//float3 gMatSpecular;
+float3 gMatShininess;
+
+struct v2f
+{
+  float4 position	: POSITION;
+	float3 wPosition: TEXCOORD0;
+  float3 wNormal	: TEXCOORD1;
+  float4 color	: COLOR0;
+};
+
+
+float4 fragment_light_fs(v2f IN) : COLOR0
+{
+/*
+	float3 P = IN.wPosition.xyz;
+	float3 N = normalize(IN.wNormal);
+
+	// Diffuse light
+	float3 L = normalize(gLightPosition - P);
+	float diffuseLight = max(dot(N, L), 0);
+	float3 diffuse = gLightColor * diffuseLight * IN.color.xyz;//* gMatDiffuse
+
+	// Specular light
+	float3 V = normalize(gEyePosition - P);
+	float3 H = normalize(L + V);
+	float specularLight = pow(max(dot(N, H), 0), gMatShininess);
+	if (diffuseLight <= 0)
+		specularLight = 0;
+	float3 specular = gLightColor * specularLight * float3(1, 1, 1);// * gMatSpecular
+
+	float4 color = float4(0, 0, 0, 1);
+	color.xyz = diffuse + specular;
+  */
+	return float4(1, 0, 0, 1);
+}
+

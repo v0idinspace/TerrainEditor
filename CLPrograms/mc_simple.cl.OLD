@@ -1,0 +1,434 @@
+
+
+//__constant sampler_t gVolumeSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;;
+//__constant sampler_t gVolumeSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;;
+__constant sampler_t gVolumeSampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
+
+
+float4 LinearInterp(float isoValue, float4 p1, float4 p2, float densityP1, float densityP2)
+{
+  float t = (isoValue - densityP1) / (densityP2 - densityP1);
+	return mix(p1, p2, t);
+}
+
+float4 LinearInterp2(float isoValue, float4 p1, float4 p2, float densityP1, float densityP2)
+{
+  //float t = (isoValue - densityP1) / (densityP2 - densityP1);
+	//return mix(p1, p2, t);
+  return p1;
+}
+
+
+// 1. Classify voxels
+__kernel void ClassifyVoxels(
+                __read_only image3d_t blockData,
+                uint blockSize,
+                float isoValue,
+                __global uint* activeVoxels,
+                __global uint* numVertsToGenerate,
+                __global uint* edgeTable,
+                __global int* triTable)
+{
+  uint i    = get_global_id(0);
+  uint j    = get_global_id(1);
+
+  uint blockSizeSqr = blockSize*blockSize;
+
+  for(uint k=0; k<blockSize; k++)
+  {
+    int4 gridCoord = (int4)(i, j, k, 0);
+    uint  voxelID   = i  + (j>0)*(j*blockSizeSqr-1) + k*blockSize;   // ID works
+  
+    // Curent voxel corner coords
+    float size = (float)blockSize;
+    float4 voxCornCoord0 = (float4)( (i)  /size, (j)  /size, (k+1)/size,  0); //gridCoord + (int4)(0, 0, 1, 0);
+    float4 voxCornCoord1 = (float4)( (i+1)/size, (j)  /size, (k+1)/size,  0); //gridCoord + (int4)(1, 0, 1, 0);
+    float4 voxCornCoord2 = (float4)( (i+1)/size, (j)  /size, (k)/size,    0); //gridCoord + (int4)(1, 0, 0, 0);
+    float4 voxCornCoord3 = (float4)( (i)  /size, (j)  /size, (k)/size,    0); //gridCoord + (int4)(0, 0, 0, 0);
+    float4 voxCornCoord4 = (float4)( (i)  /size, (j+1)/size, (k+1)/size,  0); //gridCoord + (int4)(0, 1, 1, 0);
+    float4 voxCornCoord5 = (float4)( (i+1)/size, (j+1)/size, (k+1)/size,  0); //gridCoord + (int4)(1, 1, 1, 0);
+    float4 voxCornCoord6 = (float4)( (i+1)/size, (j+1)/size, (k)/size,    0); //gridCoord + (int4)(1, 1, 0, 0);
+    float4 voxCornCoord7 = (float4)( (i)  /size, (j+1)/size, (k)/size,    0); //gridCoord + (int4)(0, 1, 0, 0);
+    
+    // use the above to sample the voxel corenr density values and generate case number
+    // Test: output case number 0-255
+    float cornerDensity[8];
+    cornerDensity[0] = read_imagef(blockData, gVolumeSampler, voxCornCoord0).x;
+    cornerDensity[1] = read_imagef(blockData, gVolumeSampler, voxCornCoord1).x;
+    cornerDensity[2] = read_imagef(blockData, gVolumeSampler, voxCornCoord2).x;
+    cornerDensity[3] = read_imagef(blockData, gVolumeSampler, voxCornCoord3).x;
+    cornerDensity[4] = read_imagef(blockData, gVolumeSampler, voxCornCoord4).x;
+    cornerDensity[5] = read_imagef(blockData, gVolumeSampler, voxCornCoord5).x;
+    cornerDensity[6] = read_imagef(blockData, gVolumeSampler, voxCornCoord6).x;
+    cornerDensity[7] = read_imagef(blockData, gVolumeSampler, voxCornCoord7).x;
+
+    // Get the voxel intex
+    int voxelCase;
+	  voxelCase =  (cornerDensity[0] < isoValue);
+	  voxelCase += (cornerDensity[1] < isoValue)*2;
+	  voxelCase += (cornerDensity[2] < isoValue)*4;
+	  voxelCase += (cornerDensity[3] < isoValue)*8;
+	  voxelCase += (cornerDensity[4] < isoValue)*16;
+	  voxelCase += (cornerDensity[5] < isoValue)*32;
+	  voxelCase += (cornerDensity[6] < isoValue)*64;
+	  voxelCase += (cornerDensity[7] < isoValue)*128;
+
+    // a. Store active voxels ID
+    if(edgeTable[voxelCase] != 0)
+      activeVoxels[voxelID] = voxelCase;
+
+    // b. For each active voxel
+    //    calculate how many vertices we will generate
+    uint ttIndex = (voxelCase>0)*((voxelCase)*16);        // TriangleTable index -- TODO image2D sampler
+
+    uint numVertices = 0;
+
+    for(int p=0; p<12; p++)
+    {
+      if(triTable[ttIndex+p] != -1)
+        numVertices++;
+    }
+    numVertsToGenerate[voxelID] = numVertices;
+  }
+}
+
+// Generate the posBufferOffsets
+__kernel void CalculateVertBufferOffsets(
+                __global uint* activeVoxels,
+                __global uint* numVertsToGenerate,
+                __global uint* vertBufferOffset,
+                uint numVoxels)
+{
+  // use single thread for now
+  uint prevID = 0;
+
+  // Calculate current offset
+  for(int id=0; id<numVoxels; id++)
+  {
+    if(activeVoxels[id])
+    {
+      vertBufferOffset[id] = vertBufferOffset[prevID] + numVertsToGenerate[prevID];
+
+      prevID = id;
+    }
+  }
+}
+
+__kernel void GenerateTriangles(
+                __read_only image3d_t blockData,
+                uint blockSize,
+                float isoValue,
+                __global float4* pos,
+                __global float4* norm,
+                __global uint* numVertsToGenerate,
+                __global uint* vertBufferOffset,
+                __global uint* activeVoxels,
+                __global uint* edgeTable,
+                __global int* triTable)
+{
+  uint i    = get_global_id(0);
+  uint j    = get_global_id(1);
+
+  uint blockSizeSqr = blockSize*blockSize;
+
+  for(uint k=0; k<blockSize; k++)
+  {
+    float voxelSize = 1.0f;//0.03125f;
+    uint  voxelID   = i  + (j>0)*(j*blockSizeSqr-1) + k*blockSize;   // ID works
+    uint  voxelCase = activeVoxels[voxelID];
+    uint  edgeCase  = edgeTable[voxelCase];
+
+    // Grid coordinates -- uint used to sample the volume
+    int4 gridCoordi   = (int4)(i, j, k, 0);
+
+    // -0.5f is the offset to center the block in 0,0,0
+    float4 gridCoordf = (float4)(i*voxelSize, j*voxelSize, k*voxelSize, 1);
+    
+    // Generate triangles of the active voxels
+    if(activeVoxels[voxelID])
+    {
+      // Curent voxel corner coords -- used to sample the volume
+      float4  volumeCoords[8];
+      volumeCoords[0] = gridCoordf + (float4)(0, 0, 1, 1);
+      volumeCoords[1] = gridCoordf + (float4)(1, 0, 1, 1);
+      volumeCoords[2] = gridCoordf + (float4)(1, 0, 0, 1);
+      volumeCoords[3] = gridCoordf + (float4)(0, 0, 0, 1);
+      volumeCoords[4] = gridCoordf + (float4)(0, 1, 1, 1);
+      volumeCoords[5] = gridCoordf + (float4)(1, 1, 1, 1);
+      volumeCoords[6] = gridCoordf + (float4)(1, 1, 0, 1);
+      volumeCoords[7] = gridCoordf + (float4)(0, 1, 0, 1);
+
+      float size = (float)blockSize;
+    
+      // The position of each point in the world
+      float4 v[8];
+      v[0] = gridCoordf + (float4)(0,         0,          voxelSize,  1.0f);
+      v[1] = gridCoordf + (float4)(voxelSize, 0,          voxelSize,  1.0f);
+      v[2] = gridCoordf + (float4)(voxelSize, 0,          0,          1.0f);
+      v[3] = gridCoordf + (float4)(0,         0,          0,          1.0f);
+      v[4] = gridCoordf + (float4)(0,         voxelSize,  voxelSize,  1.0f);
+      v[5] = gridCoordf + (float4)(voxelSize, voxelSize,  voxelSize,  1.0f);
+      v[6] = gridCoordf + (float4)(voxelSize, voxelSize,  0,          1.0f);
+      v[7] = gridCoordf + (float4)(0,         voxelSize,  0,          1.0f);
+
+      // Get the density values of each corner of the current block
+      float cornerDensity[8];
+      cornerDensity[0] = read_imagef(blockData, gVolumeSampler, volumeCoords[0]/size).x;
+      cornerDensity[1] = read_imagef(blockData, gVolumeSampler, volumeCoords[1]/size).x;
+      cornerDensity[2] = read_imagef(blockData, gVolumeSampler, volumeCoords[2]/size).x;
+      cornerDensity[3] = read_imagef(blockData, gVolumeSampler, volumeCoords[3]/size).x;
+      cornerDensity[4] = read_imagef(blockData, gVolumeSampler, volumeCoords[4]/size).x;
+      cornerDensity[5] = read_imagef(blockData, gVolumeSampler, volumeCoords[5]/size).x;
+      cornerDensity[6] = read_imagef(blockData, gVolumeSampler, volumeCoords[6]/size).x;
+      cornerDensity[7] = read_imagef(blockData, gVolumeSampler, volumeCoords[7]/size).x;
+
+
+      // Get Vertex list & gradient for normals
+      float4 vertList[12];
+      float4 gradVerts[8];  // the normals at each point of the cube
+      float4 gradList[12];
+
+
+      // Calculate the gradVerts
+      // TODO: Organize 
+      // 0: Get the density values of the neighbours for corner
+      float4 nbourCoord0X = volumeCoords[0] + (float4)(-1,  0,  0,  0);
+      float  nbour0Xval   = read_imagef(blockData, gVolumeSampler, nbourCoord0X/size).x;
+      float4 nbourCoord0Y = volumeCoords[0] + (float4)( 0, 0,  0,  0); // -1
+      float  nbour0Yval   = read_imagef(blockData, gVolumeSampler, nbourCoord0Y/size).x;
+      float4 nbourCoord0Z = volumeCoords[0] + (float4)( 0,  0, 1,  0);
+      float  nbour0Zval   = read_imagef(blockData, gVolumeSampler, nbourCoord0Z/size).x;
+
+      //gradVerts[0] = (float4)(-1, -1, 1, 0);
+
+      gradVerts[0] = (float4)(nbour0Xval - cornerDensity[1],
+                              nbour0Yval - cornerDensity[4],
+                              nbour0Zval - cornerDensity[3], 0);
+
+      // 1: Get the density values of the neighbours for corner
+      float4 nbourCoord1X = volumeCoords[1] + (float4)(1,  0,  0,  0);
+      float  nbour1Xval   = read_imagef(blockData, gVolumeSampler, nbourCoord1X).x;
+      float4 nbourCoord1Y = volumeCoords[1] + (float4)( 0, 0,  0,  0); //-1
+      float  nbour1Yval   = read_imagef(blockData, gVolumeSampler, nbourCoord1Y).x;
+      float4 nbourCoord1Z = volumeCoords[1] + (float4)( 0,  0, 1,  0);
+      float  nbour1Zval   = read_imagef(blockData, gVolumeSampler, nbourCoord1Z).x;
+
+      //gradVerts[1] = (float4)(1, -1, 1, 0);
+
+      gradVerts[1] = (float4)(cornerDensity[0] - nbour1Xval,
+                              nbour1Yval - cornerDensity[5],
+                              nbour1Zval - cornerDensity[2], 0);
+
+      // 2: Get the density values of the neighbours for corner
+      float4 nbourCoord2X = volumeCoords[2] + (float4)(1,  0,  0,  0);
+      float  nbour2Xval   = read_imagef(blockData, gVolumeSampler, nbourCoord2X).x;
+      float4 nbourCoord2Y = volumeCoords[2] + (float4)( 0, 0,  0,  0); // -1
+      float  nbour2Yval   = read_imagef(blockData, gVolumeSampler, nbourCoord2Y).x;
+      float4 nbourCoord2Z = volumeCoords[2] + (float4)( 0,  0, -1,  0);
+      float  nbour2Zval   = read_imagef(blockData, gVolumeSampler, nbourCoord2Z).x;
+
+      //gradVerts[2] = (float4)(1, -1, -1, 0);
+
+      gradVerts[2] = (float4)(cornerDensity[3] - nbour2Xval,
+                              nbour2Yval - cornerDensity[6],
+                              cornerDensity[1] - nbour2Zval, 0);
+
+      // 3: Get the density values of the neighbours for corner
+      float4 nbourCoord3X = volumeCoords[3] + (float4)(-1,  0,  0,  0);
+      float  nbour3Xval   = read_imagef(blockData, gVolumeSampler, nbourCoord2X).x;
+      float4 nbourCoord3Y = volumeCoords[3] + (float4)( 0, 0,  0,  0); // -1
+      float  nbour3Yval   = read_imagef(blockData, gVolumeSampler, nbourCoord2Y).x;
+      float4 nbourCoord3Z = volumeCoords[3] + (float4)( 0,  0, -1,  0);
+      float  nbour3Zval   = read_imagef(blockData, gVolumeSampler, nbourCoord2Z).x;
+
+      //gradVerts[3] = (float4)(-1, -1, -1, 0);
+
+      gradVerts[3] = (float4)(nbour3Xval - cornerDensity[2],
+                              nbour3Yval - cornerDensity[7],
+                              cornerDensity[0] - nbour3Zval, 0);
+
+      // 4: Get the density values of the neighbours for corner
+      float4 nbourCoord4X = volumeCoords[4] + (float4)(-1,  0,  0,  0);
+      float  nbour4Xval   = read_imagef(blockData, gVolumeSampler, nbourCoord4X).x;
+      float4 nbourCoord4Y = volumeCoords[4] + (float4)( 0, 0,  0,  0); // 1
+      float  nbour4Yval   = read_imagef(blockData, gVolumeSampler, nbourCoord4Y).x;
+      float4 nbourCoord4Z = volumeCoords[4] + (float4)( 0,  0, 1,  0);
+      float  nbour4Zval   = read_imagef(blockData, gVolumeSampler, nbourCoord4Z).x;
+
+      //gradVerts[4] = (float4)(-1, 1, 1, 0);
+
+      gradVerts[4] = (float4)(nbour4Xval - cornerDensity[5],
+                              cornerDensity[0] - nbour4Yval,
+                              nbour4Zval - cornerDensity[7], 0);
+
+      // 5: Get the density values of the neighbours for corner
+      float4 nbourCoord5X = volumeCoords[5] + (float4)(1,  0,  0,  0);
+      float  nbour5Xval   = read_imagef(blockData, gVolumeSampler, nbourCoord5X).x;
+      float4 nbourCoord5Y = volumeCoords[5] + (float4)( 0, 0,  0,  0); // 1
+      float  nbour5Yval   = read_imagef(blockData, gVolumeSampler, nbourCoord5Y).x;
+      float4 nbourCoord5Z = volumeCoords[5] + (float4)( 0,  0, 1,  0);
+      float  nbour5Zval   = read_imagef(blockData, gVolumeSampler, nbourCoord5Z).x;
+
+      //gradVerts[5] = (float4)(1, 1, 1, 0);
+
+      gradVerts[5] = (float4)(cornerDensity[4] - nbour5Xval,
+                              cornerDensity[1] - nbour5Yval,
+                              nbour5Zval - cornerDensity[6], 0);
+
+      // 6: Get the density values of the neighbours for corner
+      float4 nbourCoord6X = volumeCoords[6] + (float4)(1,  0,  0,  0);
+      float  nbour6Xval   = read_imagef(blockData, gVolumeSampler, nbourCoord6X).x;
+      float4 nbourCoord6Y = volumeCoords[6] + (float4)( 0, 0,  0,  0); // 1
+      float  nbour6Yval   = read_imagef(blockData, gVolumeSampler, nbourCoord6Y).x;
+      float4 nbourCoord6Z = volumeCoords[6] + (float4)( 0,  0, -1,  0);
+      float  nbour6Zval   = read_imagef(blockData, gVolumeSampler, nbourCoord6Z).x;
+
+      //gradVerts[6] = (float4)(1, 1, -1, 0);
+
+      gradVerts[6] = (float4)(cornerDensity[7] - nbour6Xval,
+                              cornerDensity[2] - nbour6Yval,
+                              cornerDensity[5] - nbour6Zval, 0);
+
+      // 7: Get the density values of the neighbours for corner
+      float4 nbourCoord7X = volumeCoords[7] + (float4)(-1,  0,  0,  0);
+      float  nbour7Xval   = read_imagef(blockData, gVolumeSampler, nbourCoord7X).x;
+      float4 nbourCoord7Y = volumeCoords[7] + (float4)( 0, 0,  0,  0); // 1
+      float  nbour7Yval   = read_imagef(blockData, gVolumeSampler, nbourCoord7Y).x;
+      float4 nbourCoord7Z = volumeCoords[7] + (float4)( 0,  0, -1,  0);
+      float  nbour7Zval   = read_imagef(blockData, gVolumeSampler, nbourCoord7Z).x;
+
+      //gradVerts[7] = (float4)(-1, 1, -1, 0);
+
+      gradVerts[7] = (float4)(nbour7Xval - cornerDensity[6],
+                              cornerDensity[3] - nbour7Yval,
+                              cornerDensity[4] - nbour7Zval, 0);
+
+      //\Eof calc gradverts
+
+
+      if (edgeCase & 1)
+      {
+        vertList[0] = LinearInterp(isoValue, v[0], v[1], cornerDensity[0], cornerDensity[1]);
+        //gradList[0] = (float4)(0, 1, 0, 0);
+        gradList[0] = LinearInterp2(isoValue, gradVerts[0], gradVerts[1], cornerDensity[0], cornerDensity[1]);
+      }
+
+      if (edgeCase & 2)
+      {
+        vertList[1] = LinearInterp(isoValue,  v[1], v[2], cornerDensity[1], cornerDensity[2]);
+        //gradList[1] = (float4)(0, 1, 0, 0);
+        gradList[1] = LinearInterp2(isoValue, gradVerts[1], gradVerts[2], cornerDensity[1], cornerDensity[2]);
+      }
+
+      if (edgeCase & 4)
+      {
+        vertList[2] = LinearInterp(isoValue,  v[2], v[3], cornerDensity[2], cornerDensity[3]);
+        //gradList[2] = (float4)(0, 1, 0, 0);
+        gradList[2] = LinearInterp2(isoValue, gradVerts[2], gradVerts[3], cornerDensity[2], cornerDensity[3]);
+      }
+
+      if (edgeCase & 8)
+      {
+        vertList[3] = LinearInterp(isoValue,  v[3], v[0], cornerDensity[3], cornerDensity[0]);
+        //gradList[3] = (float4)(0, 1, 0, 0);
+        gradList[3] = LinearInterp2(isoValue, gradVerts[3], gradVerts[0], cornerDensity[3], cornerDensity[0]);
+      }
+
+      if (edgeCase & 16)
+      {
+        vertList[4] = LinearInterp(isoValue,  v[4], v[5], cornerDensity[4], cornerDensity[5]);
+        //gradList[4] = (float4)(0, 1, 0, 0);
+        gradList[4] = LinearInterp2(isoValue, gradVerts[4], gradVerts[5], cornerDensity[4], cornerDensity[5]);
+      }
+
+      if (edgeCase & 32)
+      {
+        vertList[5] = LinearInterp(isoValue,  v[5], v[6], cornerDensity[5], cornerDensity[6]);
+        //gradList[5] = (float4)(0, 1, 0, 0);
+        gradList[5] = LinearInterp2(isoValue, gradVerts[5], gradVerts[6], cornerDensity[5], cornerDensity[6]);
+      }
+
+      if (edgeCase & 64)
+      {
+        vertList[6] = LinearInterp(isoValue,  v[6], v[7], cornerDensity[6], cornerDensity[7]);
+        //gradList[6] = (float4)(0, 1, 0, 0);
+        gradList[6] = LinearInterp2(isoValue, gradVerts[6], gradVerts[7], cornerDensity[6], cornerDensity[7]);
+      }
+
+      if (edgeCase & 128)
+      {
+        vertList[7] = LinearInterp(isoValue,  v[7], v[4], cornerDensity[7], cornerDensity[4]);
+        //gradList[7] = (float4)(0, 1, 0, 0);
+        gradList[7] = LinearInterp2(isoValue, gradVerts[7], gradVerts[4], cornerDensity[7], cornerDensity[4]);
+      }
+
+      if (edgeCase & 256)
+      {
+        vertList[8] = LinearInterp2(isoValue,  v[0], v[4], cornerDensity[0], cornerDensity[4]);
+        //gradList[8] = (float4)(0, 1, 0, 0);
+        gradList[8] = LinearInterp(isoValue, gradVerts[0], gradVerts[4], cornerDensity[0], cornerDensity[4]);
+      }
+
+      if (edgeCase & 512)
+      {
+        vertList[9] = LinearInterp(isoValue,  v[1], v[5], cornerDensity[1], cornerDensity[5]);
+        //gradList[9] = (float4)(0, 1, 0, 0);
+        gradList[9] = LinearInterp2(isoValue, gradVerts[1], gradVerts[5], cornerDensity[1], cornerDensity[5]);
+      }
+
+      if (edgeCase & 1024)
+      {
+        vertList[10] = LinearInterp(isoValue, v[2], v[6], cornerDensity[2], cornerDensity[6]);
+        //gradList[10] = (float4)(0, 1, 0, 0);
+        gradList[10] = LinearInterp2(isoValue, gradVerts[2], gradVerts[6], cornerDensity[2], cornerDensity[6]);
+      }
+
+      if (edgeCase & 2048)
+      {
+        vertList[11] = LinearInterp(isoValue, v[3], v[7], cornerDensity[3], cornerDensity[7]);
+        //gradList[11] = (float4)(0, 1, 0, 0);
+        gradList[11] = LinearInterp2(isoValue, gradVerts[3], gradVerts[7], cornerDensity[3], cornerDensity[7]);
+      }
+
+
+      // Generate the triangles
+      uint vertOffset = vertBufferOffset[voxelID];
+      uint ttIndex = (voxelCase>0)*((voxelCase)*16);        // TriangleTable index -- TODO image2D sampler
+
+      for(int ttI=0; triTable[ttIndex+ttI] != -1; ttI+=3)
+      {
+        uint index = vertOffset + ttI;
+
+        pos[index  + 0] = vertList[triTable[ttIndex + ttI  + 0]]; // Position
+        //norm[index + 0] = gradVerts[triTable[ttIndex + ttI + 0]]; // Normal
+
+        pos[index  + 1] = vertList[triTable[ttIndex + ttI  + 1]]; // Position
+        //norm[index + 1] = gradVerts[triTable[ttIndex + ttI + 1]]; // Normal
+
+        pos[index  + 2] = vertList[triTable[ttIndex + ttI  + 2]];  // Position
+        //norm[index + 2] = gradVerts[triTable[ttIndex + ttI + 2]]; // Normal
+
+        // dbg
+        //norm[index + 0] = (float4)(0, 1, 0, 0);
+        //norm[index + 1] = (float4)(0, 1, 0, 0);
+        //norm[index + 2] = (float4)(0, 1, 0, 0);
+      }
+    }
+  }
+}
+
+__kernel void ClearBuffers(
+                __global uint* numVertsToGenerate,
+                __global uint* vertBufferOffset,
+                __global uint* activeVoxels,
+                uint numVoxels)
+{
+  uint index = get_global_id(0);
+
+  if(index < numVoxels)
+  {
+    numVertsToGenerate[index] = 0;
+    vertBufferOffset[index]   = 0;
+    activeVoxels[index]       = 0;
+  }
+}

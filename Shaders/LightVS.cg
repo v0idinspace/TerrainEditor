@@ -1,0 +1,45 @@
+// Basic per-fragment lighting (no texture) fragment shader.
+// Source: NVIDIA CG Tutorial (http://http.developer.nvidia.com/CgTutorial/cg_tutorial_frontmatter.html)
+
+float4x4 gWorldMtx;
+float4x4 gViewMtx;
+float4x4 gProjectionMtx;
+
+struct a2v
+{
+  float3 position	: POSITION;
+  float3 normal	: NORMAL;
+  float3 color	: COLOR0;
+};
+
+struct v2f
+{
+  float4 position	: POSITION;
+	float3 wPosition: TEXCOORD0;
+  float3 wNormal	: TEXCOORD1;
+  float4 color	: COLOR0;
+};
+
+v2f fragment_light_vs(a2v IN)
+{
+  v2f OUT;
+
+  float4x4 wvp;
+  wvp = mul(gWorldMtx, gViewMtx);
+  wvp = mul(wvp, gProjectionMtx);
+
+	// Transform to world space
+	OUT.wPosition = mul(float4(IN.position, 1.0f), gWorldMtx);
+	OUT.wNormal	  = mul(float4(IN.normal, 0.0f), gWorldMtx);
+
+	// Transform to homogeneous clip space
+  OUT.position  = mul(float4(OUT.wPosition, 1.0f), wvp);
+  //OUT.position  = mul(p, OUT.position);
+
+  //OUT.position  = mul(float4(IN.position, 1.0f), wvp);
+	
+	// Send color straigth
+  OUT.color     = float4(IN.color, 1.0f);
+
+  return OUT;
+}

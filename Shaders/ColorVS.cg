@@ -1,0 +1,30 @@
+
+float4x4 gWorldMtx;
+float4x4 gViewMtx;
+float4x4 gProjectionMtx;
+
+struct a2v
+{
+  float3 position	: POSITION;
+};
+
+struct v2f
+{
+  float4 position	: POSITION;
+  float4 color	: COLOR0;
+};
+
+v2f color_vs(a2v IN)
+{
+  v2f OUT;
+
+  float4x4 wvp;
+  wvp = mul(gWorldMtx, gViewMtx);
+  wvp = mul(wvp, gProjectionMtx);
+  
+	// Transform to homogeneous clip space
+  OUT.position  = mul(float4(IN.position, 1.0f), wvp);
+  OUT.color     = float4(0.1f, 0.1f, 0.1f, 1.0f);
+
+  return OUT;
+}
